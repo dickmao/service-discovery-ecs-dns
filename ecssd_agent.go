@@ -14,6 +14,9 @@ import (
 	"time"
 
 	"context"
+	"io"
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,8 +27,6 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	docker "github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"os"
 )
 
 const workerTimeout = 180 * time.Second
@@ -208,7 +209,7 @@ func createARecord(hostName string, localIP string) error {
 				{
 					Action: aws.String(route53.ChangeActionCreate),
 					ResourceRecordSet: &route53.ResourceRecordSet{
-						Name: aws.String(strings.Split(hostName, ".")[0]),
+						Name: aws.String(strings.Split(hostName, ".")[0] + "." + DNSName),
 						// It creates an A record with the IP of the host running the agent
 						Type: aws.String(route53.RRTypeA),
 						ResourceRecords: []*route53.ResourceRecord{
@@ -243,7 +244,7 @@ func removeARecord(hostName string) error {
 	paramsList := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(configuration.HostedZoneId), // Required
 		MaxItems:        aws.String("1"),
-		StartRecordName: aws.String(strings.Split(hostName, ".")[0]),
+		StartRecordName: aws.String(strings.Split(hostName, ".")[0] + "." + DNSName),
 		StartRecordType: aws.String(route53.RRTypeA),
 	}
 	resp, err := r53.ListResourceRecordSets(paramsList)
