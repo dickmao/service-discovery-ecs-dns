@@ -362,7 +362,7 @@ func deleteDNSRecord(serviceName string, dockerId string) error {
 		return err
 	}
 	if recordSetToDelete == nil {
-		log.Error("Route53 record doesn't exist")
+		log.Info("Record " + srvRecordName + " does not exist on this host")
 		return nil
 	}
 
@@ -706,6 +706,19 @@ func main() {
 					}
 					if sum > 8 {
 						log.Error("Error creating DNS record")
+						break
+					}
+					time.Sleep(time.Duration(sum) * time.Second)
+					sum += 2
+				}
+
+				sum = 1
+				for {
+					if err = createARecord(svc.Name, localIP); err == nil {
+						break
+					}
+					if sum > 8 {
+						log.Error("Error creating A record")
 						break
 					}
 					time.Sleep(time.Duration(sum) * time.Second)
