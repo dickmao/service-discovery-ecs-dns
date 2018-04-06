@@ -588,6 +588,8 @@ func main() {
 		log.Error("Record " + configuration.Hostname + " not created, resolves to " + localIP)
 	}
 
+	instanceId, err := metadataClient.GetMetadata("instance-id")
+	logErrorAndFail(err)
 	startFn := func(event events.Message) error {
 		var err error
 		container, err := dockerClient.ContainerInspect(context.Background(), event.ID)
@@ -637,7 +639,7 @@ func main() {
 
 		if *sendEvents {
 			taskArn := getTaskArn(event.ID)
-			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`" }`, "Task Started", configuration.Hostname, "awslabs.ecs.container")
+			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`","instance-id":"`+instanceId+`" }`, "Task Started", configuration.Hostname, strings.Split(DNSName, ".")[0])
 		}
 
 		log.Info("Docker " + event.ID + " started")
@@ -667,7 +669,7 @@ func main() {
 		}
 		if *sendEvents {
 			taskArn := getTaskArn(event.ID)
-			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`" }`, "Task Stopped", configuration.Hostname, "awslabs.ecs.container")
+			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`" }`, "Task Stopped", configuration.Hostname, strings.Split(DNSName, ".")[0])
 		}
 		log.Info("Docker " + event.ID + " stopped")
 		return nil
