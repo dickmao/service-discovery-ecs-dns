@@ -667,9 +667,19 @@ func main() {
 				}
 			}
 		}
+		if len(changes) > 0 {
+			_, err = r53.ChangeResourceRecordSets(&route53.ChangeResourceRecordSetsInput{
+				ChangeBatch: &route53.ChangeBatch{
+					Comment: aws.String("Service Delete DNS Records"),
+					Changes: changes,
+				},
+				HostedZoneId: aws.String(configuration.HostedZoneId),
+			})
+			logErrorNoFatal(err)
+		}
 		if *sendEvents {
 			taskArn := getTaskArn(event.ID)
-			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`" }`, "Task Stopped", configuration.Hostname, strings.Split(DNSName, ".")[0])
+			sendToCWEvents(`{ "dockerId": "`+event.ID+`","TaskArn":"`+taskArn+`","instance-id":"`+instanceId+`" }`, "Task Stopped", configuration.Hostname, strings.Split(DNSName, ".")[0])
 		}
 		log.Info("Docker " + event.ID + " stopped")
 		return nil
